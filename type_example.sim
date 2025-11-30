@@ -3,10 +3,10 @@ public class test {
   static boolean bbb;
   static String s;
 
-  public static void f() {
+  static void f() {
   }
 
-  public static void main() {
+  static void main() {
     int aaa;
 
     // some errors involving methods

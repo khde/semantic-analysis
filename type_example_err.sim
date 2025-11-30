@@ -3,7 +3,7 @@ public class test {
   static boolean bbb;
   static String s;
 
-  public static void f() {
+  static void f() {
      int x;
      int y;
      int z;
@@ -20,22 +20,13 @@ public class test {
 
      y = x;  // this y will have value 1
      
-     switch (y * 2) {
-     case 0:
-      x = z;
-     case 2:
-      x = z * z;
-     case 4:
-      x = z * z * z;
-     default:
-      x = 0;
-      }
+   
 
 
 
   }
 
-  public static void main() {
+  static void main() {
     int aaa;
 
     // some errors involving methods

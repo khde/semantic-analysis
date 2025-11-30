@@ -5,16 +5,18 @@ class Types {
     public static final int StringType = 3;
     public static final int MethodType = 4;
     public static final int ErrorType = 5;
+    public static final int VoidType = 6;
 
     public static String ToString(int v) {
         switch(v){
-	case 0: return "class";
-	case 1: return "int";
-	case 2: return "boolean";
-	case 3: return "String";
-	case 4: return "method";
-	case 5: return "error";
-	default: throw new RuntimeException();
+            case 0: return "class";
+            case 1: return "int";
+            case 2: return "boolean";
+            case 3: return "String";
+            case 4: return "method";
+            case 5: return "error";
+            case 6: return "void";
+            default: throw new RuntimeException();
         }
     }
 }
