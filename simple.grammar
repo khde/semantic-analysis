@@ -1,0 +1,115 @@
+/**********************************************************************
+ Grammar for Simple programs version 3
+Last modification: Tue Oct 29 10:14:48 UTC 2024
+ **********************************************************************/
+program		::= PUBLIC CLASS id LCURLY classBody RCURLY
+		;
+
+classBody	::= declList
+
+declList 	::= declList decl
+		| /* epsilon */
+		;
+
+decl		::= fieldDecl
+		| methodDecl
+		;
+
+fieldDecl	::= STATIC type id SEMICOLON
+		;
+
+methodDecl	::= PUBLIC STATIC VOID id formals methodBody // no return value
+                | PUBLIC STATIC INT id formals methodBody // int return value allowed
+	        ;						
+
+formals		::= LPAREN RPAREN
+		| LPAREN formalsList RPAREN
+		;
+
+formalsList	::= formalDecl
+		| formalDecl COMMA formalsList
+		;
+
+formalDecl	::= type id
+		;
+
+methodBody	::= LCURLY varDeclList stmtList RCURLY
+		;
+
+varDeclList	::= varDeclList varDecl
+		| /* epsilon */
+		;
+
+varDecl		::= type id SEMICOLON
+		;
+
+stmtList	::= stmtList stmt
+		| /* epsilon */
+		;
+
+
+/* the following rules are for the switch / case statement */
+
+switchGroupList   ::= switchGroupList switchGroup
+		| /* epsilon */
+		;
+
+switchGroup	::=   switchLabel stmtList
+		;
+
+switchLabel	::=   CASE exp COLON
+		|     DEFAULT COLON
+		;      
+		     
+stmt		::= PRINT LPAREN exp RPAREN SEMICOLON
+	        | id ASSIGN exp SEMICOLON
+	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY
+	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY ELSE LCURLY stmtList RCURLY
+	        | DO LCURLY stmtList RCURLY WHILE LPAREN exp RPAREN 
+		| RETURN SEMICOLON
+		| RETURN exp SEMICOLON // return with a value
+	        | id LPAREN RPAREN SEMICOLON  	  // function call with no args
+	        | id LPAREN actualList RPAREN SEMICOLON // with args
+		| LCURLY varDeclList stmtList RCURLY  // nested block
+		| SWITCH LPAREN exp RPAREN LCURLY switchGroupList RCURLY
+		;
+
+exp		::= exp PLUS exp
+	        | exp MINUS exp
+	        | exp TIMES exp
+	        | exp DIVIDE exp
+	        | NOT exp
+	        | exp AND exp
+	        | exp OR exp
+		| exp EQUALS exp
+		| exp NOTEQUALS exp
+		| exp LESS exp
+		| exp GREATER exp
+		| exp LESSEQ exp
+		| exp GREATEREQ exp
+		| exp POWER exp  // potentiation operator, right-assoc -> NOTE: YOU NEED to add the
+		      	    	 // ** token to  the scanner implementation
+		| MINUS exp
+		| id
+	        | INTLITERAL
+	        | STRINGLITERAL
+	        | TRUE
+	        | FALSE
+	        | LPAREN exp RPAREN
+	        | id LPAREN RPAREN   	      // function call with no args
+	        | id LPAREN actualList RPAREN // with args
+		
+		;
+
+actualList	::= exp
+		| actualList COMMA exp
+		;
+
+type		::= INT
+		| BOOLEAN
+		| STRING
+		;
+
+id              ::= ID
+		;
+

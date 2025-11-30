@@ -1,0 +1,306 @@
+import java_cup.runtime.*;
+
+parser code {:
+   public void report_error(String message, Object info) {
+        int line = 0;
+        int column = 0;
+        StringBuilder m = new StringBuilder("");
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+            String tokenName = sym.terminalNames[s.sym];
+            // Special case EOF token program
+            if (s.sym != sym.EOF) {
+            line = ((TokenVal) s.value).linenum;
+            column = ((TokenVal) s.value).charnum;
+            }
+            m.append(" : " + message + " - Token: " + tokenName + " value " + s.value);
+        }
+        Errors.fatal(line, column, m.toString());
+    }
+:};
+
+/* Keywords */
+terminal TokenVal       PUBLIC, CLASS, STATIC, INT, BOOLEAN, STRING, VOID;
+terminal TokenVal       TRUE, FALSE, IF, ELSE, NO_ELSE, WHILE, DO;
+terminal TokenVal       PRINT, READ, RETURN;
+terminal TokenVal       SWITCH, CASE, DEFAULT;
+
+/* Literals */
+terminal IdTokenVal     ID;
+terminal IntLitTokenVal INTLITERAL;
+terminal StringLitTokenVal STRINGLITERAL;
+
+/* Punctuation */
+terminal TokenVal       LCURLY, RCURLY, LPAREN, RPAREN;
+terminal TokenVal       COMMA, ASSIGN, SEMICOLON, COLON;
+
+/* Operators */
+terminal TokenVal       PLUS, MINUS, TIMES, DIVIDE, MOD;
+terminal TokenVal       POWER;
+terminal TokenVal       NOT, AND, OR;
+terminal TokenVal       EQUALS, NOTEQUALS;
+terminal TokenVal       LESS, GREATER, LESSEQ, GREATEREQ;
+terminal TokenVal       UMINUS;
+
+non terminal ProgramNode      program;
+non terminal ClassBodyNode    classBody;
+non terminal Sequence         declList;
+non terminal DeclNode         decl;
+
+non terminal FieldDeclNode    fieldDecl;
+non terminal VarDeclNode      varDecl;
+non terminal MethodDeclNode   fnDecl;
+non terminal Sequence         formalList;
+non terminal FormalDeclNode   formal;
+non terminal Sequence         localDeclList;
+non terminal TypeNode         type;
+non terminal IdNode           id;
+
+non terminal Sequence         stmtList;
+non terminal StmtNode         stmt;
+non terminal AssignStmtNode   assignStmt;
+non terminal CallStmtNode     callStmt;
+non terminal PrintStmtNode    printStmt;
+non terminal IfStmtNode       ifStmt;
+non terminal WhileStmtNode    whileStmt;
+non terminal DoWhileStmtNode  doWhileStmt;
+non terminal ReturnStmtNode   returnStmt;
+non terminal BlockStmtNode    blockStmt;
+non terminal SwitchStmtNode   switchStmt;
+non terminal Sequence         switchGroupList;
+non terminal SwitchGroupNode  switchGroup;
+non terminal SwitchLabelNode  switchLabel;
+
+non terminal ExpNode          exp;
+non terminal ExpNode          assignExp;
+non terminal CallExpNode      callExp;
+non terminal Sequence         expList;
+
+non terminal IntLitNode       intLit;
+non terminal StringLitNode    stringLit;
+non terminal TrueNode         trueLit;
+non terminal FalseNode        falseLit;
+
+/* Associativity */
+precedence left OR;
+precedence left AND;
+precedence nonassoc EQUALS, NOTEQUALS, LESS, GREATER, LESSEQ, GREATEREQ;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE, MOD;
+precedence right POWER, NOT, UMINUS;
+
+start with program;
+
+/* Rules */
+program ::= PUBLIC CLASS id:i LCURLY classBody:c RCURLY
+            {: RESULT = new ProgramNode(i, c); :}
+          ;
+
+classBody ::= declList:d
+            {: RESULT = new ClassBodyNode(new DeclListNode(d)); :}
+          ;
+
+declList ::= declList:dl decl:d
+            {: dl.addToEnd(d); RESULT = dl; :}
+           | 
+            {: RESULT = new Sequence(); :}
+          ;
+
+decl ::= fieldDecl:f {: RESULT = f; :}
+       | fnDecl:f    {: RESULT = f; :}
+       ;
+
+/* Declarations */
+fieldDecl ::= STATIC type:t id:i SEMICOLON
+            {: RESULT = new FieldDeclNode(t, i); :}
+          ;
+
+varDecl ::= type:t id:i SEMICOLON
+          {: RESULT = new VarDeclNode(t, i); :}
+        ;
+
+localDeclList ::= localDeclList:l varDecl:v
+                 {: l.addToEnd(v); RESULT = l; :}
+                | 
+                 {: RESULT = new Sequence(); :}
+              ;
+
+fnDecl ::= STATIC type:t id:i LPAREN formalList:f RPAREN 
+           LCURLY localDeclList:ld stmtList:sl RCURLY
+           {: RESULT = new MethodDeclNode(t, i, new FormalsListNode(f),
+                  new MethodBodyNode(new DeclListNode(ld), new StmtListNode(sl))); :}
+         | STATIC type:t id:i LPAREN RPAREN 
+           LCURLY localDeclList:ld stmtList:sl RCURLY
+           {: RESULT = new MethodDeclNode(t, i, new FormalsListNode(new Sequence()),
+                  new MethodBodyNode(new DeclListNode(ld), new StmtListNode(sl))); :}
+         ;
+
+formalList ::= formal:f
+              {: Sequence s = new Sequence(); s.addToEnd(f); RESULT = s; :}
+             | formalList:l COMMA formal:f
+              {: l.addToEnd(f); RESULT = l; :}
+           ;
+
+formal ::= type:t id:i
+         {: RESULT = new FormalDeclNode(t, i); :}
+       ;
+
+type ::= INT      {: RESULT = new IntNode(); :}
+     | BOOLEAN    {: RESULT = new BooleanNode(); :}
+     | STRING     {: RESULT = new StringNode(); :}
+     | VOID       {: RESULT = new VoidNode(); :}
+     ;
+
+id ::= ID:i
+     {: RESULT = new IdNode(i.linenum, i.charnum, i.idVal); :}
+   ;
+
+/* Statements */
+
+stmtList ::= stmtList:l stmt:s
+            {: l.addToEnd(s); RESULT = l; :}
+           | 
+            {: RESULT = new Sequence(); :}
+         ;
+
+stmt ::= assignStmt:s   {: RESULT = s; :}
+       | callStmt:s     {: RESULT = s; :}
+       | printStmt:s    {: RESULT = s; :}
+       | ifStmt:s       {: RESULT = s; :}
+       | whileStmt:s    {: RESULT = s; :}
+       | doWhileStmt:s  {: RESULT = s; :}
+       | returnStmt:s   {: RESULT = s; :}
+       | switchStmt:s   {: RESULT = s; :}
+       | blockStmt:s    {: RESULT = s; :}
+       ;
+
+blockStmt ::= LCURLY localDeclList:ld stmtList:sl RCURLY
+            {: RESULT = new BlockStmtNode(new DeclListNode(ld), new StmtListNode(sl)); :}
+          ;
+
+assignStmt ::= id:i ASSIGN exp:e SEMICOLON
+             {: RESULT = new AssignStmtNode(i, e); :}
+           ;
+
+callStmt ::= id:i LPAREN expList:el RPAREN SEMICOLON
+           {: RESULT = new CallStmtNode(i, new ExpListNode(el)); :}
+         | id:i LPAREN RPAREN SEMICOLON
+           {: RESULT = new CallStmtNode(i); :}
+         ;
+
+printStmt ::= PRINT LPAREN exp:e RPAREN SEMICOLON
+            {: RESULT = new PrintStmtNode(e); :}
+          ;
+
+ifStmt ::= IF LPAREN exp:e RPAREN stmt:s
+        {: Sequence seq = new Sequence(); seq.addToEnd(s);
+            RESULT = new IfStmtNode(e, new StmtListNode(seq), new StmtListNode(new Sequence()));
+        :} %prec NO_ELSE
+        | IF LPAREN exp:e RPAREN stmt:s1 ELSE stmt:s2
+        {: Sequence seq1 = new Sequence(); seq1.addToEnd(s1);
+        Sequence seq2 = new Sequence(); seq2.addToEnd(s2);
+        RESULT = new IfStmtNode(e, new StmtListNode(seq1), new StmtListNode(seq2));
+    :}
+;
+
+whileStmt ::= WHILE LPAREN exp:e RPAREN stmt:s
+            {: Sequence sq = new Sequence(); sq.addToEnd(s);
+              RESULT = new WhileStmtNode(e, new StmtListNode(sq)); :}
+          ;
+
+doWhileStmt ::= DO stmt:s WHILE LPAREN exp:e RPAREN SEMICOLON
+              {: Sequence sq = new Sequence(); sq.addToEnd(s);
+                RESULT = new DoWhileStmtNode(new StmtListNode(sq), e); :}
+            ;
+
+returnStmt ::= RETURN exp:e SEMICOLON
+             {: RESULT = new ReturnStmtNode(e); :}
+           | RETURN SEMICOLON
+             {: RESULT = new ReturnStmtNode(null); :}
+           ;
+
+switchStmt ::= SWITCH LPAREN exp:e RPAREN LCURLY switchGroupList:sg RCURLY
+             {: RESULT = new SwitchStmtNode(e, new SwitchGroupListNode(sg)); :}
+           ;
+
+switchGroupList ::= switchGroupList:l switchGroup:g
+                   {: l.addToEnd(g); RESULT = l; :}
+                  |
+                   {: RESULT = new Sequence(); :}
+                ;
+
+switchGroup ::= switchLabel:l stmtList:sl
+              {: RESULT = new SwitchGroupNode(l, new StmtListNode(sl)); :}
+            ;
+
+switchLabel ::= CASE intLit:i COLON
+              {: RESULT = new CaseLabelNode(i); :}
+            | DEFAULT COLON
+              {: RESULT = new DefaultLabelNode(); :}
+            ;
+
+/* Expressions */
+exp ::= assignExp:e {: RESULT = e; :}
+      | exp:e1 OR exp:e2 {: RESULT = new OrNode(e1, e2); :}
+      | exp:e1 AND exp:e2 {: RESULT = new AndNode(e1, e2); :}
+      | exp:e1 EQUALS exp:e2 {: RESULT = new EqualsNode(e1, e2); :}
+      | exp:e1 NOTEQUALS exp:e2 {: RESULT = new NotEqualsNode(e1, e2); :}
+      | exp:e1 LESS exp:e2 {: RESULT = new LessNode(e1, e2); :}
+      | exp:e1 GREATER exp:e2 {: RESULT = new GreaterNode(e1, e2); :}
+      | exp:e1 LESSEQ exp:e2 {: RESULT = new LessEqNode(e1, e2); :}
+      | exp:e1 GREATEREQ exp:e2 {: RESULT = new GreaterEqNode(e1, e2); :}
+      | exp:e1 PLUS exp:e2 {: RESULT = new PlusNode(e1, e2); :}
+      | exp:e1 MINUS exp:e2 {: RESULT = new MinusNode(e1, e2); :}
+      | exp:e1 TIMES exp:e2 {: RESULT = new TimesNode(e1, e2); :}
+      | exp:e1 DIVIDE exp:e2 {: RESULT = new DivideNode(e1, e2); :}
+      | exp:e1 MOD exp:e2 {: RESULT = new ModNode(e1, e2); :}
+      | exp:e1 POWER exp:e2 {: RESULT = new PowerNode(e1, e2); :}
+      
+      /* unary operators */
+      | MINUS exp:e {: RESULT = new UnaryMinusNode(e);:} %prec UMINUS
+      | NOT exp:e {: RESULT = new NotNode(e); :}
+      
+      | LPAREN exp:e RPAREN {: RESULT = e; :}
+      
+      /* primaries */
+      | id:i {: RESULT = i; :}
+      | callExp:c {: RESULT = c; :}
+      | intLit:i {: RESULT = i; :}
+      | stringLit:s {: RESULT = s; :}
+      | trueLit:t {: RESULT = t; :}
+      | falseLit:f {: RESULT = f; :}
+      | READ LPAREN RPAREN {: RESULT = new ReadIntExpNode(); :}
+      ;
+
+assignExp ::= id:i ASSIGN exp:e
+            {: RESULT = new AssignExpNode(i, e); :}
+          ;
+
+callExp ::= id:i LPAREN expList:el RPAREN
+          {: RESULT = new CallExpNode(i, new ExpListNode(el)); :}
+        | id:i LPAREN RPAREN
+          {: RESULT = new CallExpNode(i); :}
+        ;
+
+expList ::= exp:e
+          {: Sequence s = new Sequence(); s.addToEnd(e); RESULT = s; :}
+        | expList:l COMMA exp:e
+          {: l.addToEnd(e); RESULT = l; :}
+        ;
+
+/* Literals */
+intLit ::= INTLITERAL:i
+            {: RESULT = new IntLitNode(i.linenum, i.charnum, i.intVal); :}
+          ;
+
+stringLit ::= STRINGLITERAL:s
+            {: RESULT = new StringLitNode(s.linenum, s.charnum, s.stringVal); :}
+          ;
+
+trueLit ::= TRUE:t
+            {: RESULT = new TrueNode(t.linenum, t.charnum); :}
+          ;
+
+falseLit ::= FALSE:f
+            {: RESULT = new FalseNode(f.linenum, f.charnum); :}
+          ;

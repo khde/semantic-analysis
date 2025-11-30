@@ -1,0 +1,51 @@
+public class Test {
+
+    static int a;
+    static boolean b;
+    static String s;
+    static void main() {
+        int x;
+        int y;
+        boolean flag;
+        String msg;
+
+        x = 10;
+        flag = true;
+        flag = false;
+        msg = "hello";
+
+        x = 1 + 2 * 3 - 4 / 2 + 5 % 2;
+        x = (1 + 2) * (3 - 4);
+        x = 2 ** 3 ** 2;
+        x = -x;
+        b = !flag;
+
+        b = true && false || !false;
+        b = (x < y) && (x >= 0);
+        b = (x == y) || (x != 0);
+
+        callTest(x, y, flag, msg);
+        callTest();
+
+        if (x > 5) {
+            System.out.println("x > 5");
+        }
+        else {
+            System.out.println("x <= 5");
+        }
+
+        while (x > 0) {
+          System.out.println(x);
+          x = x - 1;
+        }
+    }
+
+    static int callTest(int p, int q, boolean fl, String st) {
+        int z;
+        return z;
+    }
+
+    static int callTest() {
+        return 0;
+    }
+}

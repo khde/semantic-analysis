@@ -1,0 +1,174 @@
+import java_cup.runtime.*; // defines the Symbol class
+
+// The generated scanner will return a Symbol for each token that it finds.
+// A Symbol contains an Object field named value; that field will be of type
+// TokenVal, defined below.
+//
+// A TokenVal object contains the line number on which the token occurs as
+// well as the number of the character on that line that starts the token.
+// Some tokens (e.g., literals) also include the value of the token.
+
+class TokenVal {
+ // fields
+    int linenum;
+    int charnum;
+ // constructor
+    TokenVal(int l, int c) {
+        linenum = l;
+	charnum = c;
+    }
+}
+
+class IntLitTokenVal extends TokenVal {
+ // new field: the value of the integer literal
+    int intVal;
+ // constructor
+    IntLitTokenVal(int l, int c, int val) {
+        super(l,c);
+	intVal = val;
+    }
+}
+
+
+class StringLitTokenVal extends TokenVal {
+    String stringVal;
+    StringLitTokenVal(int l, int c, String val) {
+        super(l,c);
+        this.stringVal = val;
+    }
+}
+
+class IdTokenVal extends TokenVal {
+    String idVal;
+    IdTokenVal(int l, int c, String val) {
+        super(l,c);
+        this.idVal = val;
+    }
+}
+
+
+// The following class is used to keep track of the character number at which
+// the current token starts on its line.
+class CharNum {
+  static int num=1;
+}
+%%
+
+DIGIT=		[0-9]
+WHITESPACE=	[\ \t\n]
+IDENTIFIER = [a-zA-Z][a-zA-Z0-9_]*
+
+// The next 3 lines are included so that we can use the generated scanner
+// with java CUP (the Java parser generator)
+%implements java_cup.runtime.Scanner
+%function next_token
+%type java_cup.runtime.Symbol
+
+// Tell JLex what to do on end-of-file
+%eofval{
+return new Symbol(sym.EOF);
+%eofval}
+
+// Turn on line counting
+%line
+
+%%
+
+{DIGIT}+   {
+    int val = (new Integer(yytext())).intValue();
+    Symbol S = new Symbol(sym.INTLITERAL, new IntLitTokenVal(yyline+1, CharNum.num, val));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+{WHITESPACE}+  {CharNum.num += yytext().length();}
+
+// Keywords
+"String"           { CharNum.num += yytext().length(); return new Symbol(sym.STRING, new TokenVal(yyline+1, CharNum.num)); }
+"System.out.println" { CharNum.num += yytext().length(); return new Symbol(sym.PRINT, new TokenVal(yyline+1, CharNum.num)); }
+"boolean"          { CharNum.num += yytext().length(); return new Symbol(sym.BOOLEAN, new TokenVal(yyline+1, CharNum.num)); }
+"class"            { CharNum.num += yytext().length(); return new Symbol(sym.CLASS, new TokenVal(yyline+1, CharNum.num)); }
+"do"               { CharNum.num += yytext().length(); return new Symbol(sym.DO, new TokenVal(yyline+1, CharNum.num)); }
+"else"             { CharNum.num += yytext().length(); return new Symbol(sym.ELSE, new TokenVal(yyline+1, CharNum.num)); }
+"false"            { CharNum.num += yytext().length(); return new Symbol(sym.FALSE, new TokenVal(yyline+1, CharNum.num)); }
+"if"               { CharNum.num += yytext().length(); return new Symbol(sym.IF, new TokenVal(yyline+1, CharNum.num)); }
+"int"              { CharNum.num += yytext().length(); return new Symbol(sym.INT, new TokenVal(yyline+1, CharNum.num)); }
+"public"           { CharNum.num += yytext().length(); return new Symbol(sym.PUBLIC, new TokenVal(yyline+1, CharNum.num)); }
+"return"           { CharNum.num += yytext().length(); return new Symbol(sym.RETURN, new TokenVal(yyline+1, CharNum.num)); }
+"static"           { CharNum.num += yytext().length(); return new Symbol(sym.STATIC, new TokenVal(yyline+1, CharNum.num)); }
+"true"             { CharNum.num += yytext().length(); return new Symbol(sym.TRUE, new TokenVal(yyline+1, CharNum.num)); }
+"void"             { CharNum.num += yytext().length(); return new Symbol(sym.VOID, new TokenVal(yyline+1, CharNum.num)); }
+"while"            { CharNum.num += yytext().length(); return new Symbol(sym.WHILE, new TokenVal(yyline+1, CharNum.num)); }
+// Missing in sym file: case switch default
+
+// Identifiers
+{IDENTIFIER} {
+    Symbol S = new Symbol(sym.ID, new IdTokenVal(yyline+1, CharNum.num, yytext()));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+// Operators
+"{"     { CharNum.num++; return new Symbol(sym.LCURLY, new TokenVal(yyline+1, CharNum.num)); }
+"}"     { CharNum.num++; return new Symbol(sym.RCURLY, new TokenVal(yyline+1, CharNum.num)); }
+"("     { CharNum.num++; return new Symbol(sym.LPAREN, new TokenVal(yyline+1, CharNum.num)); }
+")"     { CharNum.num++; return new Symbol(sym.RPAREN, new TokenVal(yyline+1, CharNum.num)); }
+","     { CharNum.num++; return new Symbol(sym.COMMA, new TokenVal(yyline+1, CharNum.num)); }
+"="     { CharNum.num++; return new Symbol(sym.ASSIGN, new TokenVal(yyline+1, CharNum.num)); }
+";"     { CharNum.num++; return new Symbol(sym.SEMICOLON, new TokenVal(yyline+1, CharNum.num)); }
+"+"     { CharNum.num++; return new Symbol(sym.PLUS, new TokenVal(yyline+1, CharNum.num)); }
+"-"     { CharNum.num++; return new Symbol(sym.MINUS, new TokenVal(yyline+1, CharNum.num)); }
+"*"     { CharNum.num++; return new Symbol(sym.TIMES, new TokenVal(yyline+1, CharNum.num)); }
+"/"     { CharNum.num++; return new Symbol(sym.DIVIDE, new TokenVal(yyline+1, CharNum.num)); }
+"%"     { CharNum.num++; return new Symbol(sym.MOD, new TokenVal(yyline+1, CharNum.num)); }
+"!"     { CharNum.num++; return new Symbol(sym.NOT, new TokenVal(yyline+1, CharNum.num)); }
+"**"    { CharNum.num += 2; return new Symbol(sym.POWER, new TokenVal(yyline+1, CharNum.num)); }
+"&&"    { CharNum.num += 2; return new Symbol(sym.AND, new TokenVal(yyline+1, CharNum.num)); }
+"||"    { CharNum.num += 2; return new Symbol(sym.OR, new TokenVal(yyline+1, CharNum.num)); }
+"=="    { CharNum.num += 2; return new Symbol(sym.EQUALS, new TokenVal(yyline+1, CharNum.num)); }
+"!="    { CharNum.num += 2; return new Symbol(sym.NOTEQUALS, new TokenVal(yyline+1, CharNum.num)); }
+"<="    { CharNum.num += 2; return new Symbol(sym.LESSEQ, new TokenVal(yyline+1, CharNum.num)); }
+">="    { CharNum.num += 2; return new Symbol(sym.GREATEREQ, new TokenVal(yyline+1, CharNum.num)); }
+"<"     { CharNum.num++; return new Symbol(sym.LESS, new TokenVal(yyline+1, CharNum.num)); }
+">"     { CharNum.num++; return new Symbol(sym.GREATER, new TokenVal(yyline+1, CharNum.num)); }
+
+// Single line comment
+"//".* {
+    for (int i = 0; i < yytext().length(); i++) {
+        if (yytext().charAt(i) == '\n') {
+            CharNum.num = 1;
+        } else {
+            CharNum.num++;
+        }
+    }
+}
+
+// Multi line comment
+"/*"[^]*"*/" {
+    for (int i = 0; i < yytext().length(); i++) {
+        if (yytext().charAt(i) == '\n') {
+            CharNum.num = 1;
+        } else {
+            CharNum.num++;
+        }
+    }
+}
+
+// String literals
+\"([^\\\"\n]|\\[nt'\"\\])*\" {
+    for (int i = 0; i < yytext().length(); i++) {
+        if (yytext().charAt(i) == '\n') {
+            CharNum.num = 1;
+        } else {
+            CharNum.num++;
+        }
+    }
+    String str = yytext().substring(1, yytext().length() - 1);
+    return new Symbol(sym.STRINGLITERAL, new StringLitTokenVal(yyline+1, CharNum.num, str));
+}
+
+// Invalid chars
+.	   {Errors.fatal(yyline+1, CharNum.num,
+			 "ignoring illegal character: " + yytext());
+	    CharNum.num++;
+	   }

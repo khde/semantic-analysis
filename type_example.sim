@@ -1,0 +1,27 @@
+
+public class test {
+  static boolean bbb;
+  static String s;
+
+  public static void f() {
+  }
+
+  public static void main() {
+    int aaa;
+
+    // some errors involving methods
+    aaa = f + f;
+    bbb = f == 3;
+    bbb = f > main;
+
+    // other type errors
+    aaa = aaa + (!false);
+    aaa = aaa + "foo";
+    bbb = aaa;
+
+    // don't give too many or too few error messages here
+    bbb = (aaa + true) && (bbb < true);
+  }
+}
+
+

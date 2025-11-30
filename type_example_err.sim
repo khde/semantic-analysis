@@ -1,0 +1,56 @@
+
+public class test {
+  static boolean bbb;
+  static String s;
+
+  public static void f() {
+     int x;
+     int y;
+     int z;
+     
+     x = 1;
+     z = 2;
+
+     {
+        // testing that compound statements with variable declarations work
+        int x;  // this is allowed, and shadows the x above 
+	x = 2;  
+        y = x;  // when executed y will have value 2 here not 1
+     }
+
+     y = x;  // this y will have value 1
+     
+     switch (y * 2) {
+     case 0:
+      x = z;
+     case 2:
+      x = z * z;
+     case 4:
+      x = z * z * z;
+     default:
+      x = 0;
+      }
+
+
+
+  }
+
+  public static void main() {
+    int aaa;
+
+    // some errors involving methods
+    aaa = f + f;
+    bbb = f == 3;
+    bbb = f > main;
+
+    // other type errors
+    aaa = aaa + (!false);
+    aaa = aaa + "foo";
+    bbb = aaa;
+
+    // don't give too many or too few error messages here
+    bbb = (aaa + true) && (bbb < true);
+  }
+}
+
+
