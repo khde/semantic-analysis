@@ -20,22 +20,17 @@ public class P4 {
 
         try {
             parser P = new parser(new Yylex(input));
-
             Symbol result = P.parse();
             ProgramNode root = (ProgramNode) result.value;
 
-            if (Errors.fatalErrorCount == 0) {
-                SymbolTable st = new SymbolTable();
-                root.analyzeNames(st);
-            }
+            SymbolTable st = new SymbolTable();
+            root.analyzeNames(st);
+
+            root.checkTypes();
 
             if (Errors.fatalErrorCount == 0) {
                 PrintWriter out = new PrintWriter(System.out, true);
-                root.decompile(out, 0); 
-            }
-
-            if (Errors.fatalErrorCount == 0) {
-                root.checkTypes();
+                root.decompile(out, 0);
             }
 
         } catch (Exception e) {
@@ -44,3 +39,4 @@ public class P4 {
         }
     }
 }
+
