@@ -70,10 +70,10 @@ clean:
 	rm -f *~ *.class parser.java simple.jlex.java
 
 # test:	test.sim P3.class 
-test:	type_example.sim P4.class 
+test:	test_types.sim P4.class 
 	@echo "If you get an error below your Parser does not work yet!"
 	@echo "Modify the simple.cup specification to implement the language!"
-	java -cp $(CLASSPATH) P4 type_example.sim test.out
+	java -cp $(CLASSPATH) P4 test_types.sim test.out
 
 ###
 # submit
