@@ -94,17 +94,13 @@ import java.util.*;
 abstract class ASTnode { 
     abstract public void decompile(PrintWriter p, int indent);
 
-    // Pass 1: Name Analysis
     public void analyzeNames(SymbolTable st) {
     }
 
-    // Pass 2: Type Checking
     public int checkTypes() {
         return Types.ErrorType; 
     }
 
-    // --- ADDED THESE HELPER METHODS ---
-    // Default location is 0:0 unless overridden
     public int getLine() { return 0; }
     public int getChar() { return 0; }
     // ----------------------------------
@@ -130,16 +126,13 @@ class ProgramNode extends ASTnode {
         // 1. Enter Global/Class Scope
         st.enterScope();
 
-        // 2. Analyze the body (declarations)
         myClassBody.analyzeNames(st);
 
-        // 3. Requirement: Check for 'main' method [cite: 79]
         SymbolTable.Sym mainSym = st.lookupLocal("main");
         if (mainSym == null) {
             Errors.fatal(0, 0, "No main method declared");
         }
 
-        // 4. Exit Scope
         st.exitScope();
     }
 
@@ -231,13 +224,11 @@ class FormalsListNode extends ASTnode {
         } catch (NoCurrentException ex) {}
     }
 
-    // Helper to extract types for Method signature
     public List<SymbolTable.Sym> getSignatureParams() {
         List<SymbolTable.Sym> params = new ArrayList<>();
         try {
             for (myFormals.start(); myFormals.isCurrent(); myFormals.advance()) {
                 FormalDeclNode node = (FormalDeclNode) myFormals.getCurrent();
-                // We create a temporary Sym just for the type signature
                 params.add(new SymbolTable().new Sym(node.name(), node.getType()));
             }
         } catch (NoCurrentException ex) {}
@@ -391,7 +382,7 @@ class FieldDeclNode extends DeclNode {
 
     public void analyzeNames(SymbolTable st) {
         if (st.lookupLocal(myId.strVal()) != null) {
-            Errors.fatal(myId.getLine(), myId.getChar(), "Multiply declared identifier");
+            Errors.fatal(myId.getLine(), myId.getChar(), "Identifier declared multiple times");
         } else {
             SymbolTable.Sym sym = st.new Sym(myId.strVal(), myType.getType());
             st.insert(sym);
@@ -420,7 +411,7 @@ class VarDeclNode extends DeclNode {
 
     public void analyzeNames(SymbolTable st) {
         if (st.lookupLocal(myId.strVal()) != null) {
-            Errors.fatal(myId.getLine(), myId.getChar(), "Multiply declared identifier");
+            Errors.fatal(myId.getLine(), myId.getChar(), "Identifier declared multiple times");
         } else {
             SymbolTable.Sym sym = st.new Sym(myId.strVal(), myType.getType());
             st.insert(sym);
@@ -449,30 +440,24 @@ class MethodDeclNode extends DeclNode {
     }
 
     public void analyzeNames(SymbolTable st) {
-        // 1. Check for duplicate method name in current scope
         if (st.lookupLocal(myId.strVal()) != null) {
-            Errors.fatal(myId.getLine(), myId.getChar(), "Multiply declared identifier");
+            Errors.fatal(myId.getLine(), myId.getChar(), "Identifier declared multiple times");
         }
 
-        // 2. Create Sym for Method (includes signature) and Insert
         List<SymbolTable.Sym> params = myFormalsList.getSignatureParams();
         SymbolTable.Sym methodSym = st.new Sym(myId.strVal(), myReturnType.getType(), params);
         st.insert(methodSym);
         myId.link(methodSym);
 
-        // 3. Enter Method Scope
         st.enterScope();
 
-        // 4. Analyze Formals (adds them as local vars) and Body
         myFormalsList.analyzeNames(st);
         myBody.analyzeNames(st);
 
-        // 5. Exit Scope
         st.exitScope();
     }
 
     public int checkTypes() {
-        // Set context for return statements
         currentMethodReturnType = myReturnType.getType();
         myBody.checkTypes();
         return Types.VoidType;
@@ -505,7 +490,7 @@ class FormalDeclNode extends DeclNode {
 
     public void analyzeNames(SymbolTable st) {
         if (st.lookupLocal(myId.strVal()) != null) {
-            Errors.fatal(myId.getLine(), myId.getChar(), "Multiply declared identifier");
+            Errors.fatal(myId.getLine(), myId.getChar(), "Identifier declared multiple times");
         } else {
             SymbolTable.Sym sym = st.new Sym(myId.strVal(), myType.getType());
             st.insert(sym);
@@ -595,7 +580,7 @@ class AssignStmtNode extends StmtNode {
 
         if (tId != Types.ErrorType && tExp != Types.ErrorType) {
             if (tId != tExp) {
-                Errors.fatal(myId.getLine(), myId.getChar(), "Type mismatch in assignment");
+                Errors.fatal(myId.getLine(), myId.getChar(), "Assignment type mismatch");
             }
         }
         return Types.VoidType;
@@ -635,7 +620,7 @@ class IfStmtNode extends StmtNode {
     public int checkTypes() {
         int condType = myExp.checkTypes();
         if (condType != Types.BoolType && condType != Types.ErrorType) {
-             Errors.fatal(myExp.getLine(), myExp.getChar(), "Condition in if statement must be boolean");
+             Errors.fatal(myExp.getLine(), myExp.getChar(), "Non-boolean condition in if-statement");
         }
         myThenStmtList.checkTypes();
         if (myElseStmtList != null) myElseStmtList.checkTypes();
@@ -681,7 +666,7 @@ class DoWhileStmtNode extends StmtNode {
         myStmtList.checkTypes();
         int condType = myExp.checkTypes();
         if (condType != Types.BoolType && condType != Types.ErrorType) {
-            Errors.fatal(myExp.getLine(), myExp.getChar(), "Condition in ... statement must be boolean");
+             Errors.fatal(myExp.getLine(), myExp.getChar(), "Non-boolean condition in if-statement");
         }
         return Types.VoidType;
     }
@@ -723,18 +708,16 @@ class CallStmtNode extends StmtNode {
         List<Integer> argTypes = myExpList.getTypes();
         List<SymbolTable.Sym> paramSyms = sym.paramTypes;
 
-        // Check argument count
         if (argTypes.size() != paramSyms.size()) {
-            Errors.fatal(myId.getLine(), myId.getChar(), "Wrong number of arguments for method " + sym.name);
+            Errors.fatal(myId.getLine(), myId.getChar(), "Incorrect number of arguments");
             return Types.ErrorType;
         }
 
-        // Check argument types
         for (int i = 0; i < argTypes.size(); i++) {
             int argT = argTypes.get(i);
             int paramT = paramSyms.get(i).type;
             if (argT != Types.ErrorType && argT != paramT) {
-                 Errors.fatal(myId.getLine(), myId.getChar(), "Type mismatch in argument " + (i+1) + " of call to " + sym.name);
+                Errors.fatal(myId.getLine(), myId.getChar(), "Assignment type mismatch");
             }
         }
         return Types.VoidType;
@@ -767,7 +750,7 @@ class ReturnStmtNode extends StmtNode {
             if (returnValType != currentMethodReturnType) {
                 int line = (myExp != null) ? myExp.getLine() : 0;
                 int col = (myExp != null) ? myExp.getChar() : 0;
-                Errors.fatal(line, col, "Return type mismatch");
+                Errors.fatal(line, col, "Incorrect return type");
             }
         }
         return Types.VoidType;
@@ -833,7 +816,7 @@ class SwitchStmtNode extends StmtNode {
     public int checkTypes() {
         int t = myExp.checkTypes();
         if (t != Types.ErrorType && t != Types.IntType) {
-            Errors.fatal(myExp.getLine(), myExp.getChar(), "Switch expression must be integer");
+            Errors.fatal(myExp.getLine(), myExp.getChar(), "Expression of switch statement is not integer");
         }
         myGroupList.checkTypes();
         return Types.VoidType;
@@ -1010,7 +993,6 @@ class IdNode extends ExpNode {
         myStrVal = strVal;
     }
 
-    // Link to the Symbol Table Entry
     private SymbolTable.Sym mySym;
     private int myLineNum; 
     private int myCharNum; 
@@ -1026,7 +1008,6 @@ class IdNode extends ExpNode {
 
     public String strVal() { return myStrVal; }
 
-    // Pass 1: Look up name
     public void analyzeNames(SymbolTable st) {
         SymbolTable.Sym s = st.lookup(myStrVal);
         if (s == null) {
@@ -1036,7 +1017,6 @@ class IdNode extends ExpNode {
         }
     }
 
-    // Pass 2: Return the type stored in the symbol
     public int checkTypes() {
         if (mySym != null) return mySym.type;
         return Types.ErrorType;
@@ -1044,7 +1024,6 @@ class IdNode extends ExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         p.print(myStrVal);
-        // Requirement: Print type in parens after name
         if (mySym != null) {
             p.print("(" + Types.ToString(mySym.type) + ")");
         }
@@ -1080,7 +1059,7 @@ class CallExpNode extends ExpNode {
 
         // Check argument count
         if (argTypes.size() != paramSyms.size()) {
-            Errors.fatal(myId.getLine(), myId.getChar(), "Wrong number of arguments for method " + sym.name);
+            Errors.fatal(myId.getLine(), myId.getChar(), "Incorrect number of arguments");
             return Types.ErrorType;
         }
 
@@ -1089,7 +1068,7 @@ class CallExpNode extends ExpNode {
             int argT = argTypes.get(i);
             int paramT = paramSyms.get(i).type;
             if (argT != Types.ErrorType && argT != paramT) {
-                 Errors.fatal(myId.getLine(), myId.getChar(), "Type mismatch in argument " + (i+1) + " of call to " + sym.name);
+                Errors.fatal(myId.getLine(), myId.getChar(), "Assignment type mismatch");
             }
         }
         // Return the actual return type of the method
@@ -1142,7 +1121,7 @@ class UnaryMinusNode extends UnaryExpNode {
     public int checkTypes() {
         int t = myExp.checkTypes();
         if (t != Types.ErrorType && t != Types.IntType) {
-            Errors.fatal(myExp.getLine(), myExp.getChar(), "Arithmetic operator applied to non-numeric operand");
+            Errors.fatal(myExp.getLine(), myExp.getChar(), "Non-numeric operand with arithmetic operator");
             return Types.ErrorType;
         }
         return Types.IntType;
@@ -1161,7 +1140,7 @@ class NotNode extends UnaryExpNode {
     public int checkTypes() {
         int t = myExp.checkTypes();
         if (t != Types.ErrorType && t != Types.BoolType) {
-            Errors.fatal(myExp.getLine(), myExp.getChar(), "Logical operator applied to non-boolean operand");
+            Errors.fatal(myExp.getLine(), myExp.getChar(), "Non-boolean operand with logical operator");
             return Types.ErrorType;
         }
         return Types.BoolType;
@@ -1182,7 +1161,7 @@ class PlusNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.IntType && t2 == Types.IntType) return Types.IntType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Arithmetic operator applied to non-numeric operand");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-numeric operand with arithmetic operator");
         return Types.ErrorType;
     }
 
@@ -1203,7 +1182,7 @@ class MinusNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.IntType && t2 == Types.IntType) return Types.IntType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Arithmetic operator applied to non-numeric operand");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-numeric operand with arithmetic operator");
         return Types.ErrorType;
     }
 
@@ -1224,7 +1203,7 @@ class TimesNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.IntType && t2 == Types.IntType) return Types.IntType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Arithmetic operator applied to non-numeric operand");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-numeric operand with arithmetic operator");
         return Types.ErrorType;
     }
 
@@ -1245,7 +1224,7 @@ class DivideNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.IntType && t2 == Types.IntType) return Types.IntType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Arithmetic operator applied to non-numeric operand");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-numeric operand with arithmetic operator");
         return Types.ErrorType;
     }
 
@@ -1266,7 +1245,7 @@ class AndNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.BoolType && t2 == Types.BoolType) return Types.BoolType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Logical operator applied to non-boolean operand");
+            Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-boolean operand with logical operator");
         return Types.ErrorType;
     }
 
@@ -1287,7 +1266,7 @@ class OrNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.BoolType && t2 == Types.BoolType) return Types.BoolType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Logical operator applied to non-boolean operand");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-boolean operand with logical operator");
         return Types.ErrorType;
     }
 
@@ -1308,9 +1287,9 @@ class EqualsNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
 
-        if (t1 == t2) return Types.BoolType; // Valid for Int==Int, Bool==Bool
+        if (t1 == t2) return Types.BoolType;
 
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Type mismatch in equality");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Type mismatch in equal-statement");
         return Types.ErrorType;
     }
 
@@ -1331,7 +1310,7 @@ class NotEqualsNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == t2) return Types.BoolType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Type mismatch in equality");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Type mismatch in equal-statement");
         return Types.ErrorType;
     }
 
@@ -1394,7 +1373,7 @@ class LessEqNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.IntType && t2 == Types.IntType) return Types.BoolType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Relational operator applied to non-numeric operand");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-numeric operand with relational operator");
         return Types.ErrorType;
     }
 
@@ -1415,7 +1394,7 @@ class GreaterEqNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.IntType && t2 == Types.IntType) return Types.BoolType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Relational operator applied to non-numeric operand");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-numeric operand with relational operator");
         return Types.ErrorType;
     }
 
@@ -1436,7 +1415,7 @@ class ModNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.IntType && t2 == Types.IntType) return Types.IntType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Arithmetic operator applied to non-numeric operand");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-numeric operand with arithmetic operator");
         return Types.ErrorType;
     }
 
@@ -1457,7 +1436,7 @@ class PowerNode extends BinaryExpNode {
         int t2 = myExp2.checkTypes();
         if (t1 == Types.ErrorType || t2 == Types.ErrorType) return Types.ErrorType;
         if (t1 == Types.IntType && t2 == Types.IntType) return Types.IntType;
-        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Arithmetic operator applied to non-numeric operand");
+        Errors.fatal(myExp1.getLine(), myExp1.getChar(), "Non-numeric operand with arithmetic operator");
         return Types.ErrorType;
     }
 
@@ -1486,7 +1465,7 @@ class WhileStmtNode extends StmtNode {
     public int checkTypes() {
         int condType = myExp.checkTypes();
         if (condType != Types.BoolType && condType != Types.ErrorType) {
-            Errors.fatal(myExp.getLine(), myExp.getChar(), "Condition in ... statement must be boolean");
+            Errors.fatal(myExp.getLine(), myExp.getChar(), "Non-boolean condition in while-statement");
         }
         myStmtList.checkTypes();
         return Types.VoidType;
@@ -1533,7 +1512,6 @@ class AssignExpNode extends ExpNode {
                 return Types.ErrorType;
             }
         }
-        // Returns the type of the variable (allowing chained assignments like a=b=c)
         return tId; 
     }
 

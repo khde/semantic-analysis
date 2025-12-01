@@ -7,14 +7,12 @@ public class SymbolTable {
         public int type;
         public List<Sym> paramTypes;
 
-        // Constructor
         public Sym(String name, int type) {
             this.name = name;
             this.type = type;
             this.paramTypes = new ArrayList<>();
         }
 
-        // Constructor for methods with parameters
         public Sym(String name, int type, List<Sym> params) {
             this.name = name;
             this.type = type;
@@ -26,7 +24,6 @@ public class SymbolTable {
         }
     }
 
-    // We must use a Stack of scopes, not just one table, to handle nested blocks.
     private LinkedList<Hashtable<String, Sym>> scopes;
 
     public SymbolTable() {
@@ -34,12 +31,10 @@ public class SymbolTable {
         enterScope();
     }
 
-    // Start a new block
     public void enterScope() {
         scopes.addFirst(new Hashtable<String, Sym>());
     }
 
-    // End a block
     public void exitScope() {
         if (!scopes.isEmpty()) scopes.removeFirst();
     }

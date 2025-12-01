@@ -1,0 +1,47 @@
+
+public class Main {
+    static boolean bool;
+    static boolean bool;
+    static String text;
+
+    static void f1() {
+        int x1;
+        int y2;
+
+        if ("string") {
+        }
+
+        while ("string") {
+        }
+
+        return 5;
+
+    }
+    static void f1(int x){
+        int x;
+
+        return "text";
+    }
+
+
+    static void main(int arg1, int arg1) {
+        int x1;
+        int x1;
+        
+        x1 = val1 + val2;
+        undeclared1 = undeclaed2;
+        bbb = f > main;
+
+        x1 = x1 + (!false);
+        x1 = x1 + "foo";
+        bbb = x1;
+
+        bbb = (x1 + true) && (bbb < true);
+        x1 = true && (false || 3);
+        x1 = true + "Hallo";
+        bbb = f == 3;
+
+        f1("a");
+    }
+}
+
