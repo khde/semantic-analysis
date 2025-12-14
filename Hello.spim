@@ -1,0 +1,32 @@
+	.data
+_true:	.asciiz "true"
+_false:	.asciiz "false"
+_.newline:	.asciiz "\n"
+.text
+	.globl main
+main:		# FUNCTION ENTRY
+	sw    $ra, 0($sp)	#PUSH
+	subu  $sp, $sp, 4
+	sw    $fp, 0($sp)	#PUSH
+	subu  $sp, $sp, 4
+	addu  $fp, $sp, 8
+	# STATEMENTS
+	.data
+._L0:	.asciiz "hello world!"
+	.text
+	la    $t0, ._L0
+	sw    $t0, 0($sp)	#PUSH
+	subu  $sp, $sp, 4
+	lw    $a0, 4($sp)	#POP
+	addu  $sp, $sp, 4
+	li    $v0, 4
+	syscall
+	la    $a0, _.newline
+	li    $v0, 4
+	syscall
+		#FUNCTION EXIT
+.main_Exit:
+	lw    $ra, 0($fp)
+	move  $sp, $fp		#restore SP
+	lw    $fp, -4($fp)	#restore FP
+	jr    $ra		#return

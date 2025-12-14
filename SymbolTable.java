@@ -6,21 +6,33 @@ public class SymbolTable {
         public String name;
         public int type;
         public List<Sym> paramTypes;
+        public int offset;
+        public boolean isLocal;
+        public int num_local_vars;
+        public int num_params;
 
         public Sym(String name, int type) {
             this.name = name;
             this.type = type;
             this.paramTypes = new ArrayList<>();
+            this.offset = 0;
+            this.isLocal = false; 
+            this.num_local_vars = 0;
+            this.num_params = 0;
         }
 
         public Sym(String name, int type, List<Sym> params) {
             this.name = name;
             this.type = type;
             this.paramTypes = params;
+            this.offset = 0;
+            this.isLocal = false; 
+            this.num_local_vars = 0;
+            this.num_params = 0;
         }
 
         public String toString() {
-            return name + " (" + Types.ToString(type) + ")";
+            return name + " (" + Types.ToString(type) + "), Offset: " + offset + ", IsLocal: " + isLocal;
         }
     }
 
