@@ -5,7 +5,7 @@ public class Hello {
     //Name gleich Assembler befehl
     static int addi;
    //Teste Rekursive Funktion
-   static void recursive(int x){
+   public static void recursive(int x){
         if(x <= 1024){
             System.out.println(x);
             recursive(x+x);
@@ -13,7 +13,7 @@ public class Hello {
    }
 
    //Funktion mit vielen Parametern und lokalen Variablen
-   static void test(int aa,int bb, int cc , int dd, int ee,int ff,int gg,int hh,int ii,int jj){
+   public static void test(int aa,int bb, int cc , int dd, int ee,int ff,int gg,int hh,int ii,int jj){
     int a;
     int b;
     int c;
@@ -43,12 +43,12 @@ public class Hello {
    }
 
    //Berechne Fakultaet
-   static void fak(int x){
+   public static void fak(int x){
         erg = x;
 
    }
 
-   static void boolTester(){
+   public static void boolTester(){
         boolean b;
         String str;
         b = false;
@@ -85,7 +85,7 @@ public class Hello {
         System.out.println(10 < 5 || 2 < 3 && b);
     }
 
-    static void ifTest(){
+    public static void ifTest(){
         int x;
         boolean notassigned;
         int y;
@@ -116,7 +116,7 @@ public class Hello {
     }
 
 
-   static void main() {
+   public static void main() {
         boolean bbb;
         String str;
         int x;
