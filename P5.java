@@ -58,17 +58,24 @@ public class P5 {
 	    System.exit(0);
 	}
 
-	// Run your typechecker in two passes here
-	// e.g. ((ProgramNode)root.value).processNames();
+    ProgramNode program = (ProgramNode) root.value;
 
+    try {
+        program.analyzeNames(new SymbolTable());
+    } catch (Exception e) {
+        System.err.println("Name Analysis Error: " + e.getMessage());
+        System.exit(-1);
+    }
 
-	// Only continue  if there have been no errors so far
-	// if (!Errors.wereErrors()) {
-	//    ((ProgramNode)root.value).typeCheck();
-	//}
+    program.checkTypes();
 
-	// Now call your code generator...
-	
-	return;
+    System.out.println("Generating MIPS code to " + args[1] + "...");
+    
+    Codegen.init(outFile);
+    program.codeGen();
+    
+    outFile.close();
+    
+    System.out.println("Done.");
     }
 }
