@@ -111,7 +111,9 @@ decl ::= fieldDecl:f {: RESULT = f; :}
        ;
 
 /* Declarations */
-fieldDecl ::= STATIC type:t id:i SEMICOLON
+fieldDecl ::= PUBLIC STATIC type:t id:i SEMICOLON
+            {: RESULT = new FieldDeclNode(t, i); :}
+          | STATIC type:t id:i SEMICOLON
             {: RESULT = new FieldDeclNode(t, i); :}
           ;
 
@@ -125,9 +127,17 @@ localDeclList ::= localDeclList:l varDecl:v
                  {: RESULT = new Sequence(); :}
               ;
 
-fnDecl ::= STATIC type:t id:i LPAREN formalList:f RPAREN 
+fnDecl ::= PUBLIC STATIC type:t id:i LPAREN formalList:f RPAREN 
            LCURLY localDeclList:ld stmtList:sl RCURLY
            {: RESULT = new MethodDeclNode(t, i, new FormalsListNode(f),
+                  new MethodBodyNode(new DeclListNode(ld), new StmtListNode(sl))); :}
+         | STATIC type:t id:i LPAREN formalList:f RPAREN 
+           LCURLY localDeclList:ld stmtList:sl RCURLY
+           {: RESULT = new MethodDeclNode(t, i, new FormalsListNode(f),
+                  new MethodBodyNode(new DeclListNode(ld), new StmtListNode(sl))); :}
+         | PUBLIC STATIC type:t id:i LPAREN RPAREN 
+           LCURLY localDeclList:ld stmtList:sl RCURLY
+           {: RESULT = new MethodDeclNode(t, i, new FormalsListNode(new Sequence()),
                   new MethodBodyNode(new DeclListNode(ld), new StmtListNode(sl))); :}
          | STATIC type:t id:i LPAREN RPAREN 
            LCURLY localDeclList:ld stmtList:sl RCURLY
