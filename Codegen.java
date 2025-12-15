@@ -189,8 +189,8 @@ public class Codegen {
     // generate code to pop into the given register
     // **********************************************************************
     public static void genPop(String s) {
-        generateIndexed("lw", s, SP, 0, "Pop");
         generate("addu", SP, SP, 4);
+        generateIndexed("lw", s, SP, 0, "Pop");
     }
 
     // **********************************************************************
