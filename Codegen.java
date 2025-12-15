@@ -70,7 +70,7 @@ public class Codegen {
                 if (!arg3.equals("")) p.print(", " + arg3);
             }
         }           
-        if (!comment.equals("")) p.print("\t\t#" + comment);
+        if (!comment.equals("")) p.print("\t\t# " + comment);
         p.println();
     }
 
@@ -149,7 +149,7 @@ public class Codegen {
     public static void generateIndexed(String opcode, String arg1,
                                        String arg2, int arg3, String comment) {
         p.print("\t" + opcode + " " + arg1 + ", " + arg3 + "(" + arg2 + ")");
-        if (!comment.equals("")) p.print("\t\t#" + comment);
+        if (!comment.equals("")) p.print("\t\t# " + comment);
         p.println();
     }
 
@@ -180,7 +180,7 @@ public class Codegen {
     // generate code to push the given value onto the stack
     // **********************************************************************
     public static void genPush(String s) {
-        generateIndexed("sw", s, SP, 0, "PUSH");
+        generateIndexed("sw", s, SP, 0, "Push");
         generate("subu", SP, SP, 4);                       
     }
 
@@ -189,7 +189,7 @@ public class Codegen {
     // generate code to pop into the given register
     // **********************************************************************
     public static void genPop(String s) {
-        generateIndexed("lw", s, SP, 0, "POP");
+        generateIndexed("lw", s, SP, 0, "Pop");
         generate("addu", SP, SP, 4);
     }
 
@@ -234,7 +234,7 @@ public class Codegen {
     }
 
     public static void genComment(String comment) {
-        p.println("\t\t# " + comment);
+        p.println("\t# " + comment);
     }
 
 
@@ -243,6 +243,6 @@ public class Codegen {
     //        ._L0 ._L1 ._L2, etc.
     // **********************************************************************
     public static String nextLabel() {
-        return "._L" + (currLabel);
+        return "._L" + (currLabel++);
     }
 }

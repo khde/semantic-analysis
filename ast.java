@@ -155,7 +155,7 @@ class ProgramNode extends ASTnode {
         Codegen.p.println(".globl main");
         Codegen.p.println();
         
-        Codegen.p.println("# Init sp");
+        Codegen.p.println("# Init SP");
         Codegen.generate("addiu", Codegen.SP, Codegen.SP, "-4");
         Codegen.generate("jal", "main");
         Codegen.generate("li", Codegen.V0, "10");
@@ -787,7 +787,6 @@ class IfStmtNode extends StmtNode {
 
         myExp.codeGen();
         Codegen.genPop(Codegen.A0);
-        // Wenn 0 (false), springe zu else
         Codegen.generate("beqz", Codegen.A0, falseLabel);
 
         myThenStmtList.codeGen();
