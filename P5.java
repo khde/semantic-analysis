@@ -75,7 +75,5 @@ public class P5 {
     program.codeGen();
     
     outFile.close();
-    
-    System.out.println("Done.");
     }
 }
