@@ -146,7 +146,7 @@ class ProgramNode extends ASTnode {
 
     public void codeGen() {
         Codegen.p.println(".data");
-        Codegen.p.println(".nl: .asciiz \"\\n\"");
+        Codegen.p.println(".newline: .asciiz \"\\n\"");
         Codegen.p.println(".true_str: .asciiz \"true\"");
         Codegen.p.println(".false_str: .asciiz \"false\"");
         
@@ -155,7 +155,7 @@ class ProgramNode extends ASTnode {
         Codegen.p.println(".globl main");
         Codegen.p.println();
         
-        Codegen.p.println("# Init SP");
+        Codegen.p.println("# SP initialisation");
         Codegen.generate("addiu", Codegen.SP, Codegen.SP, "-4");
         Codegen.generate("jal", "main");
         Codegen.generate("li", Codegen.V0, "10");
@@ -191,6 +191,10 @@ class ClassBodyNode extends ASTnode {
         return Types.VoidType;
     }
 
+    public int analyzeLocals(SymbolTable st, int startOffset) {
+        return myDeclList.analyzeLocals(st, startOffset);
+    }
+
     public void codeGen() {
         myDeclList.codeGen();
     }
@@ -222,6 +226,20 @@ class DeclListNode extends ASTnode {
             }
         } catch (NoCurrentException ex) {}
         return Types.VoidType;
+    }
+
+    public int analyzeLocals(SymbolTable st, int startOffset) {
+        int count = 0;
+        int currentOffset = startOffset; 
+        try {
+            for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
+                int varsFound = ((DeclNode)myDecls.getCurrent()).analyzeLocals(st, currentOffset);
+                count += varsFound;
+
+                currentOffset -= (varsFound * 4);
+            }
+        } catch (NoCurrentException ex) {}
+        return count;
     }
 
     public void codeGen() {
@@ -310,6 +328,10 @@ class MethodBodyNode extends ASTnode {
         myDeclList.checkTypes();
         myStmtList.checkTypes();
         return Types.VoidType;
+    }
+
+    public int analyzeLocals(SymbolTable st, int startOffset) {
+        return myDeclList.analyzeLocals(st, startOffset);
     }
 
     public void codeGen() {
@@ -428,6 +450,9 @@ class ExpListNode extends ASTnode {
 // DeclNode and its subclasses
 // **********************************************************************
 abstract class DeclNode extends ASTnode {
+    public int analyzeLocals(SymbolTable st, int offset) {
+        return 0;
+    }
 }
 
 class FieldDeclNode extends DeclNode {
@@ -480,6 +505,16 @@ class VarDeclNode extends DeclNode {
         }
     }
 
+    public int analyzeLocals(SymbolTable st, int offset) {
+        SymbolTable.Sym sym = st.lookupLocal(myId.strVal());
+        if (sym != null) {
+            sym.offset = offset;
+            sym.isLocal = true; 
+            return 1;
+        }
+        return 0;
+    }
+
     public void decompile(PrintWriter p, int indent) {
         doIndent(p, indent);
         myType.decompile(p, indent);
@@ -514,6 +549,8 @@ class MethodDeclNode extends DeclNode {
 
         myFormalsList.analyzeNames(st);
         myBody.analyzeNames(st);
+        int localsCount = myBody.analyzeLocals(st, -8);
+        methodSym.num_local_vars = localsCount;
 
         st.exitScope();
     }
@@ -530,7 +567,7 @@ class MethodDeclNode extends DeclNode {
             Codegen.genLabel("_" + methodName);
         }
 
-        Codegen.genComment("Method Prologue");
+        Codegen.genComment("Function Prologue");
         Codegen.genPush(Codegen.RA); 
         Codegen.genPush(Codegen.FP); 
         Codegen.generate("addu", Codegen.FP, Codegen.SP, 8); 
@@ -543,8 +580,8 @@ class MethodDeclNode extends DeclNode {
 
         myBody.codeGen();
 
-        Codegen.genLabel("_" + methodName + "_exit");
-        Codegen.genComment("Method Epilogue");
+        Codegen.genLabel("_exit_" + methodName);
+        Codegen.genComment("Function Epilogue");
         
         Codegen.generate("move", Codegen.SP, Codegen.FP); 
         Codegen.generateIndexed("lw", Codegen.RA, Codegen.FP, 0);
@@ -653,8 +690,14 @@ class PrintStmtNode extends StmtNode {
         myExp = exp;
     }
 
-    public void analyzeNames(SymbolTable st) { myExp.analyzeNames(st); }
-    public int checkTypes() { myExp.checkTypes(); return Types.VoidType; }
+    public void analyzeNames(SymbolTable st) {
+        myExp.analyzeNames(st);
+    }
+
+    public int checkTypes() { 
+        printType = myExp.checkTypes(); 
+        return Types.VoidType; 
+    }
 
     public void codeGen() {
         myExp.codeGen();
