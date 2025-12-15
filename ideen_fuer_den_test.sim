@@ -1,0 +1,165 @@
+public class Hello {
+    static boolean bool;
+    static int erg;
+    static String staticString;
+    //Name gleich Assembler befehl
+    static int addi;
+   //Teste Rekursive Funktion
+   public static void recursive(int x){
+        if(x <= 1024){
+            System.out.println(x);
+            recursive(x+x);
+        }
+   }
+
+   //Funktion mit vielen Parametern und lokalen Variablen
+   public static void test(int aa,int bb, int cc , int dd, int ee,int ff,int gg,int hh,int ii,int jj){
+    int a;
+    int b;
+    int c;
+    int d;
+    int e;
+    int f;
+    int g;
+    int h;
+    int i;
+    int j;
+    a = 1;
+    b = 2;
+    c = 3;
+    d = 4;
+    e = 5;
+    f = 6;
+    g = 7;
+    h = 8;
+    i = 9;
+    j = 10;
+    System.out.println("Erwarte 55");
+    System.out.println(a + b +c +d + e +f +g + h +i +j);
+    System.out.println("Erwarte -55");
+    System.out.println(aa + bb + cc + dd + ee + ff + gg + hh + ii + jj);
+    System.out.println("Erwarte 0");
+    System.out.println(a + aa + (b + bb + (c + cc + d + (dd + (e + ee) + f) + (ff + g + gg) + hh) + h + ii + i) + jj + j);
+   }
+
+   //Berechne Fakultaet
+   public static void fak(int x){
+        erg = x;
+        do{
+            x = x - 1;
+            erg = erg * x;
+        }while(x > 1)
+   }
+
+   public static void boolTester(){
+        boolean b;
+        String str;
+        b = false;
+        bool = true;
+        str = "hallo";
+        staticString = "welt";
+        System.out.println("false == true");
+        System.out.println(b == bool);
+        //Vergleiche verschiedene Strings
+        System.out.println("Verschiedene Strings vergleich");
+        System.out.println(str == staticString);
+        System.out.println("Vergleiche Strings identisch aber Adresse nicht gleich");
+        staticString = "hallo";
+        System.out.println(staticString);
+        System.out.println(str);
+        System.out.println(str == staticString);
+        System.out.println("Weise String gleiche Adresse zu");
+        str = staticString;
+        System.out.println(str == staticString);
+        System.out.println("Teste Boolschen Ausdruck true");
+        System.out.println(bool);
+        System.out.println(bool || b);
+        System.out.println(true == true);
+        System.out.println(false == false);
+        System.out.println(!b);
+        System.out.println(!b && bool);
+        System.out.println(10 > 5 && 5 >= 5 && 42 == 42 || 42 != 42);
+
+        System.out.println("Teste Boolsche Ausdrucke false");
+        System.out.println(b);
+        System.out.println(bool && b);
+        System.out.println(true != true);
+        System.out.println(false == true);
+        System.out.println(10 < 5 || 2 < 3 && b);
+    }
+
+    public static void ifTest(){
+        int x;
+        boolean notassigned;
+        int y;
+        boolean b;
+        b = true;
+        x = 10;
+        y = 100;
+
+        System.out.println("Not Assigned");
+        System.out.println(notassigned);
+        System.out.println(notassigned == !b);
+        if(x < y){
+            System.out.println("x kleiner y");
+        }
+
+        if(x > y){
+         System.out.println("ERROR");
+        }else{
+            System.out.println("x nicht groeser y");
+            if(x==y){
+                System.out.println("ERROR");
+            }else{
+                System.out.println("x ungleich y");
+                return;
+            }
+        }
+        System.out.println("ERROR RETURN VORHER");
+    }
+
+
+   public static void main() {
+        boolean bbb;
+        String str;
+        int x;
+
+        bbb = false;
+        str = "HALLO WELT";
+        addi = 4211;
+        x = 199 + 42 / 10;
+        System.out.println(x);
+        test(-1,-2,-3,-4,-5,-6,-7,-8,-9,-10);
+        //recursive(2);
+        x = 1000;
+        System.out.println(x);
+        if(x >= 1000){
+            System.out.println("x ist groeser gleich 1000");
+        }else{
+            System.out.println("x ist kleiner 10000");
+        }
+        System.out.println("Erwarte 100");
+        x = 42 / 42 + (x - 1000) + 100 * 1 - 1;
+        System.out.println(x);
+
+        System.out.println("Berechne 4! = 24");
+        fak(4);
+        System.out.println(erg);
+        System.out.println("Berechne 6! = 720");
+        fak(6);
+        System.out.println(erg);
+        System.out.println("Berechne 10! = 3628800");
+        fak(10);
+        System.out.println(erg);
+        boolTester();
+        ifTest();
+        System.out.println(addi);
+        System.out.println(bbb);
+        System.out.println(str);
+        System.out.println(x);
+
+	}
+
+
+
+}
