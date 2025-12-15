@@ -69,7 +69,7 @@ public class P5 {
 
     program.checkTypes();
 
-    System.out.println("Generating MIPS code to " + args[1] + "...");
+    System.out.println("Generate MIPS " + args[1]);
     
     Codegen.init(outFile);
     program.codeGen();
