@@ -152,7 +152,7 @@ class ProgramNode extends ASTnode {
         
         Codegen.p.println();
         Codegen.p.println(".text");
-        Codegen.p.println(".global main");
+        Codegen.p.println(".globl main");
         Codegen.p.println();
         
         Codegen.p.println("# Init sp");
@@ -1251,16 +1251,16 @@ class FalseNode extends ExpNode {
 }
 
 class IdNode extends ExpNode {
+    private SymbolTable.Sym mySym;
+    private int myLineNum;
+    private int myCharNum;
+    private String myStrVal;
+
     public IdNode(int lineNum, int charNum, String strVal) {
         myLineNum = lineNum;
         myCharNum = charNum;
         myStrVal = strVal;
     }
-
-    private SymbolTable.Sym mySym;
-    private int myLineNum; 
-    private int myCharNum; 
-    private String myStrVal;
 
     public void link(SymbolTable.Sym s) {
         mySym = s;
