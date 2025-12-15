@@ -147,8 +147,8 @@ class ProgramNode extends ASTnode {
     public void codeGen() {
         Codegen.p.println(".data");
         Codegen.p.println(".newline: .asciiz \"\\n\"");
-        Codegen.p.println(".true_str: .asciiz \"true\"");
-        Codegen.p.println(".false_str: .asciiz \"false\"");
+        Codegen.p.println(".true_msg: .asciiz \"true\"");
+        Codegen.p.println(".false_msg: .asciiz \"false\"");
         
         Codegen.p.println();
         Codegen.p.println(".text");
@@ -463,9 +463,10 @@ class FieldDeclNode extends DeclNode {
 
     public void analyzeNames(SymbolTable st) {
         if (st.lookupLocal(myId.strVal()) != null) {
-            Errors.fatal(myId.getLine(), myId.getChar(), "Identifier declared multiple times");
+            Errors.fatal(myId.getLine(), myId.getChar(), "Identifier declared mutliple times");
         } else {
             SymbolTable.Sym sym = st.new Sym(myId.strVal(), myType.getType());
+            sym.isLocal = false;
             st.insert(sym);
             myId.link(sym);
         }
@@ -540,17 +541,29 @@ class MethodDeclNode extends DeclNode {
             Errors.fatal(myId.getLine(), myId.getChar(), "Identifier declared multiple times");
         }
 
-        List<SymbolTable.Sym> params = myFormalsList.getSignatureParams();
-        SymbolTable.Sym methodSym = st.new Sym(myId.strVal(), myReturnType.getType(), params);
+        List<SymbolTable.Sym> signatureParams = myFormalsList.getSignatureParams();
+        SymbolTable.Sym methodSym = st.new Sym(myId.strVal(), myReturnType.getType(), signatureParams);
+        methodSym.num_params = signatureParams.size(); 
+        
         st.insert(methodSym);
         myId.link(methodSym);
 
         st.enterScope();
-
         myFormalsList.analyzeNames(st);
+
+        int paramOffset = (signatureParams.size() * 4); 
+        for (SymbolTable.Sym sigSym : signatureParams) {
+            SymbolTable.Sym actualSym = st.lookupLocal(sigSym.name);
+            if (actualSym != null) {
+                actualSym.isLocal = true; 
+                actualSym.offset = paramOffset; 
+            }
+            paramOffset -= 4; 
+        }
+
         myBody.analyzeNames(st);
         int localsCount = myBody.analyzeLocals(st, -8);
-        methodSym.num_local_vars = localsCount;
+        methodSym.num_local_vars = localsCount; 
 
         st.exitScope();
     }
