@@ -1001,7 +1001,7 @@ class ReturnStmtNode extends StmtNode {
             myExp.codeGen();
             Codegen.genPop(Codegen.V0);
         }
-        Codegen.generate("b", "_" + currentMethodName + "_exit");
+        Codegen.generate("b", "_exit_" + currentMethodName);
     }
 
     public void decompile(PrintWriter p, int indent) {
